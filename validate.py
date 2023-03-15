@@ -1,8 +1,8 @@
 import torch 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from nn import FeedFwdNN
-from underdamped import plot_data
 
 
 def main():
@@ -27,11 +27,15 @@ def main():
     quick_preds = quick_preds.detach().numpy()
     quick_preds = quick_preds.reshape(quick_preds.shape[0])
 
-    plot_data(good_df["t"], good_preds)
-    plot_data(good_df["t"], good_y)
+    plt.plot(good_df["t"], good_preds)
+    plt.show()
+    plt.plot(good_df["t"], good_y)
+    plt.show()
 
-    plot_data(quick_df["t"], quick_preds)
-    plot_data(quick_df["t"], quick_y)
+    plt.plot(quick_df["t"], quick_preds)
+    plt.show()
+    plt.plot(quick_df["t"], quick_y)
+    plt.show()
 
 
 if __name__ == "__main__":
