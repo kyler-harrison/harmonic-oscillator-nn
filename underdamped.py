@@ -1,17 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
+import time
 
 
-def underdamped_sim(t_values, amplitude, gamma, Omega, phi):
+def underdamped_position(t_values, amplitude, gamma, Omega, phi):
     """
     Description:
-    for math, see: https://phys.libretexts.org/Bookshelves/Mathematical_Physics_and_Pedagogy/Complex_Methods_for_the_Sciences_(Chong)/05%3A_Complex_Oscillations/5.03%3A_General_Solution_for_the_Damped_Harmonic_Oscillator
-
-    constraints
+    Calculates the position value of an underdamped harmonic oscillator
+    with the inputted t_values and parameters.
+    For math, see: https://phys.libretexts.org/Bookshelves/Mathematical_Physics_and_Pedagogy/Complex_Methods_for_the_Sciences_(Chong)/05%3A_Complex_Oscillations/5.03%3A_General_Solution_for_the_Damped_Harmonic_Oscillator
 
     Inputs:
-    t_values: np array of time values, output has same shape
+    t_values: np array or scalar of time values, output has same shape
     amplitude: factor multiplied by entire expression
     gamma: damping coefficient
     Omega: sqrt((angular frequency)**2 - gamma**2). Note that this is 
@@ -21,35 +23,17 @@ def underdamped_sim(t_values, amplitude, gamma, Omega, phi):
     phi: phase shift
 
     Output:
-    np array of position values, calculated using general solution to 
-    underdamped harmonic oscillator (see url in description).
+    returns np array or scalar of position values, calculated using 
+    general solution to underdamped harmonic oscillator (see url in 
+    description).
 
     """
-
     return amplitude * np.exp(-gamma * t_values) * np.cos(Omega * t_values + phi)
 
 
-def generate_data(file_path, file_mode, t_start=0, t_stop=100, t_steps=1000, oscillation_type="good"):
+def generate_params(oscillation_type="good"):
     """
-    Description: generates a set of underdamped harmonic oscillator data
-                 using a fixed range of t and random constants.
-
-    Inputs:
-    file_path: where to write data to 
-    file_mode: mode to open data file in
-    t_start: starting value of t (defaults to 0)
-    t_stop: stopping value of t (defaults to 100)
-    t_steps: number of values from t_start to t_stop (defaults to 1000)
-    oscillation_type: "good" or "quick-damp"
-
-    Output:
-    returns None, writes data to file_path
     """
-
-    # hold range of t values constant across all generated data
-    # this creates 1000 samples
-    t_values = np.linspace(t_start, t_stop, t_steps)
-
     if (oscillation_type == "good"):
         # ensure that omega_0 and gamma are 1 order of magnitude different
         # NOTE omega_0 somewhat arbitrarily constrained to range 0.2-1 
@@ -71,8 +55,52 @@ def generate_data(file_path, file_mode, t_start=0, t_stop=100, t_steps=1000, osc
     phi = np.random.random()  # range of 0-1
     Omega = np.sqrt(omega_0**2 - gamma**2)
 
+    return amplitude, gamma, Omega, phi
+
+
+def generate_independent_data(file_path, file_mode, num_samples, t_start=1, t_stop=100, oscillation_type="good"):
+    generated_samples = []
+
+    for i in range(num_samples):
+        #t = (t_stop - t_start) * np.random.random() * t_start
+        t = np.random.randint(0, 100)
+        amplitude, gamma, Omega, phi = generate_params(oscillation_type)
+        position = underdamped_position(t, amplitude, gamma, Omega, phi)
+        generated_samples.append([t, Omega, gamma, phi, amplitude, position])
+
+    with open(file_path, file_mode) as fi:
+        if (file_mode == "w"):
+            fi.write("t,Omega,gamma,phi,amplitude,y\n")
+
+        for sample in generated_samples:
+            fi.write(f"{','.join([str(val) for val in sample])}\n")
+
+
+def generate_range_data(file_path, file_mode, t_start=0, t_stop=100, t_steps=1000, oscillation_type="good"):
+    """
+    Description: generates a set of underdamped harmonic oscillator data
+                 using a fixed range of t and random constants.
+
+    Inputs:
+    file_path: where to write data to 
+    file_mode: mode to open data file in
+    t_start: starting value of t (defaults to 0)
+    t_stop: stopping value of t (defaults to 100)
+    t_steps: number of values from t_start to t_stop (defaults to 1000)
+    oscillation_type: "good" or "quick-damp"
+
+    Output:
+    returns None, writes data to file_path
+    """
+    # hold range of t values constant across all generated data
+    # this creates 1000 samples
+    t_values = np.linspace(t_start, t_stop, t_steps)
+
+    # randomly generate parameters
+    amplitude, gamma, Omega, phi = generate_params(oscillation_type)
+
     # analytical solution (y values)
-    positions = underdamped_sim(t_values, amplitude, gamma, Omega, phi)
+    positions = underdamped_position(t_values, amplitude, gamma, Omega, phi)
 
     # write params and y vs. t to csv
     with open(file_path, file_mode) as fi:
@@ -84,18 +112,30 @@ def generate_data(file_path, file_mode, t_start=0, t_stop=100, t_steps=1000, osc
 
 
 def main():
-    num_datasets = 100
-    file_path = "underdamped_training_data.csv"
-    file_mode = "w"
+    data_dir = "data"
+    os.system(f"mkdir -p {data_dir}")
+    create_range = False
 
-    # create num_datasets of "good" damping
-    for i in range(num_datasets):
-        generate_data(file_path, file_mode, oscillation_type="good")
-        file_mode = "a"
+    if create_range:
+        num_datasets = 100
+        file_path = f"{data_dir}/underdamped_range.csv"
+        file_mode = "w"
 
-    # create num_datasets of "quick-damp" damping
-    for i in range(num_datasets):
-        generate_data(file_path, file_mode, oscillation_type="quick-damp")
+        # create num_datasets of "good" damping
+        for i in range(num_datasets):
+            generate_range_data(file_path, file_mode, oscillation_type="good")
+            file_mode = "a"
+
+        # create num_datasets of "quick-damp" damping
+        for i in range(num_datasets):
+            generate_range_data(file_path, file_mode, oscillation_type="quick-damp")
+    else:
+        start = time.time()
+        num_samples = int(1e6)
+        file_path = f"{data_dir}/underdamped_independent.csv"
+        file_mode = "w"
+        generate_independent_data(file_path, file_mode, num_samples, t_start=1, t_stop=100, oscillation_type="good")
+        print(f"time: {time.time() - start:.2f} seconds")
 
 
 if __name__ == "__main__":
