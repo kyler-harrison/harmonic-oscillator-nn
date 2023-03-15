@@ -33,6 +33,17 @@ def underdamped_position(t_values, amplitude, gamma, Omega, phi):
 
 def generate_params(oscillation_type="good"):
     """
+    Description:
+    Generates random values of Omega, gamma, amplitude, and phi that fit
+    constraints imposed by oscillation_type.
+
+    Inputs:
+    oscillation_type: either "good" (small gamma) or "quick-damp" (larger
+                      gamma)
+
+    Output:
+    returns amplitude, gamma, Omega, phi
+
     """
     if (oscillation_type == "good"):
         # ensure that omega_0 and gamma are 1 order of magnitude different
@@ -58,8 +69,27 @@ def generate_params(oscillation_type="good"):
     return amplitude, gamma, Omega, phi
 
 
-def generate_independent_data(file_path, file_mode, num_samples, t_start=1, t_stop=100, oscillation_type="good"):
+def generate_independent_data(file_path, file_mode, num_samples, t_start=0, t_stop=100, oscillation_type="good"):
     generated_samples = []
+    """
+    Description:
+    Generates a random value of t and random param values, then computes
+    the underdamped harmonic oscillator position. Does this num_samples
+    times and then writes data to csv.
+
+    Inputs:
+    file_path: name of csv to write generated data to
+    file_mode: mode to open file_path in
+    num_samples: number of random samples to generate (output file will
+                 have this many lines +1 for header)
+    t_start: beginning value of t range
+    t_stop: ending value of t range
+    oscillation_type: either "good" (small gamma) or "quick-damp" (larger
+                      gamma)
+
+    Output:
+    returns None, writes data to file
+    """
 
     for i in range(num_samples):
         #t = (t_stop - t_start) * np.random.random() * t_start
@@ -117,6 +147,9 @@ def main():
     create_range = False
 
     if create_range:
+        # create data in range t_0 to t_f with constant params
+        # creates multiple ranges with different params
+
         num_datasets = 100
         file_path = f"{data_dir}/underdamped_range.csv"
         file_mode = "w"
@@ -130,6 +163,10 @@ def main():
         for i in range(num_datasets):
             generate_range_data(file_path, file_mode, oscillation_type="quick-damp")
     else:
+        # create random t and random params, compute position
+        # create num_samples of these (t constrained to t_0 to t_f, just 
+        # not generating entire range with same constant params)
+
         start = time.time()
         num_samples = int(1e6)
         file_path = f"{data_dir}/underdamped_independent.csv"
