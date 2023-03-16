@@ -8,10 +8,16 @@ class FeedFwdNN(nn.Module):
     def __init__(self, input_size, output_size, optim_lr=0.0001):
         super(FeedFwdNN, self).__init__()
 
-        # network, starting with simple architecture
-        self.dense1 = nn.Linear(input_size, 16)
+        # the network 
+        self.dense1 = nn.Linear(input_size, 64)
         self.relu1 = nn.ReLU()
-        self.out_dense = nn.Linear(16, output_size)
+        self.dense2 = nn.Linear(64, 64)
+        self.relu2 = nn.ReLU()
+        self.dense3 = nn.Linear(64, 64)
+        self.relu3 = nn.ReLU()
+        self.dense4 = nn.Linear(64, 64)
+        self.relu4 = nn.ReLU()
+        self.out_dense = nn.Linear(64, output_size)
 
         # optimizer and loss
         self.optimizer = optim.Adam(self.parameters(), lr=optim_lr)
@@ -31,6 +37,12 @@ class FeedFwdNN(nn.Module):
         """
         x = self.dense1(input_data)
         x = self.relu1(x)
+        x = self.dense2(x)
+        x = self.relu2(x)
+        x = self.dense3(x)
+        x = self.relu3(x)
+        x = self.dense4(x)
+        x = self.relu4(x)
         x = self.out_dense(x)
         return x
 
